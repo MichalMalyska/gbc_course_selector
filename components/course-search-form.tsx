@@ -1,92 +1,131 @@
 'use client';
 
+import { Autocomplete, Box, Checkbox, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, TextField } from '@mui/material';
 import { useState } from 'react';
 
 export interface SearchCriteria {
   textSearch: string;
   department: string;
   deliveryType: string;
-  dayOfWeek: string;
+  daysOfWeek: string[];
   startTime: string;
 }
 
 interface CourseSearchProps {
   allDepartments: string[];
-  initialCriteria?: Partial<SearchCriteria>;
 }
 
 export function CourseSearchInputs({
   allDepartments,
-  initialCriteria,
 }: CourseSearchProps) {
-  const [textSearch, setTextSearch] = useState(initialCriteria?.textSearch || '');
-  const [department, setDepartment] = useState(initialCriteria?.department || "HOSF");
-  const [deliveryType, setDeliveryType] = useState(initialCriteria?.deliveryType || 'in-person');
-  const [dayOfWeek, setDayOfWeek] = useState(initialCriteria?.dayOfWeek || 'tuesday');
-  const [startTime, setStartTime] = useState(initialCriteria?.startTime || 'evening');
+  const [textSearch, setTextSearch] = useState('');
+  const [department, setDepartment] = useState("HOSF");
+  const [deliveryType, setDeliveryType] = useState('in-person');
+  const [daysOfWeek, setDaysOfWeek] = useState({
+    monday: false,
+    tuesday: true,
+    wednesday: false,
+    thursday: false,
+    friday: false,
+    saturday: false,
+    sunday: false,
+  });
+  const [startTime, setStartTime] = useState('evening');
   
-  
+
   return (
-    <div>
-      <h1>Course Search</h1>
-      <label>
-        Text Search Code:
-        <input
-          type="text"
-          value={textSearch}
-          onChange={(e) => setTextSearch(e.target.value)}
-        />
-      </label>
-      <label>
-        Department:
-        <select
-          value={department}
-          onChange={(e) => setDepartment(e.target.value)}
-        >
-          {allDepartments.map((dept) => (
-            <option key={dept} value={dept}>
-              {dept}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Delivery Type:
-        <select
-          value={deliveryType}
-          onChange={(e) => setDeliveryType(e.target.value)}
-        >
-          <option value="online">Online</option>
-          <option value="in-person">In-Person</option>
-          <option value="both">Both</option>
-        </select>
-      </label>
-      <label>
-        Day of the Week:
-        <select
-          value={dayOfWeek}
-          onChange={(e) => setDayOfWeek(e.target.value)}
-        >
-          <option value="monday">Monday</option>
-          <option value="tuesday">Tuesday</option>
-          <option value="wednesday">Wednesday</option>
-          <option value="thursday">Thursday</option>
-          <option value="friday">Friday</option>
-          <option value="saturday">Saturday</option>
-          <option value="sunday">Sunday</option>
-        </select>
-      </label>
-      <label>
-        Start Time:
-        <select
-          value={startTime}
-          onChange={(e) => setStartTime(e.target.value)}
-        >
-          <option value="morning">Morning (8am-12pm)</option>
-          <option value="day">Day (12pm-6pm)</option>
-          <option value="evening">Evening (6pm-10pm)</option>
-        </select>
-      </label>
-    </div>
+    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <FormControl sx={{ m: 1, minWidth: 120 }}>
+        <Autocomplete
+            disablePortal
+            options={allDepartments}
+            sx={{ width: 300 }}
+            renderInput={(params) => <TextField {...params} label="Department" />}
+            onChange={(e, value) => setDepartment(value || '')}
+          />
+        </FormControl>
+      </Box>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <FormControl sx={{ m: 1, minWidth: 120 }}>
+          <Select
+            value={deliveryType}
+            onChange={(e) => setDeliveryType(e.target.value)}
+          >
+            <MenuItem value="online">Online</MenuItem>
+            <MenuItem value="in-person">In-Person</MenuItem>
+            <MenuItem value="both">Both</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+      <Box sx={{ display: 'flex' }}>
+      <FormControl sx={{ m: 7, width: '100%' }} component="fieldset" variant="standard">
+        <FormLabel component="legend">Day of the Week</FormLabel>
+      <FormGroup>
+          <FormControlLabel
+            control={<Checkbox checked={daysOfWeek.monday} value="monday" onChange={(e) => setDaysOfWeek({
+              ...daysOfWeek,
+              monday: e.target.checked,
+            })}/>}
+            label="Monday"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={daysOfWeek.tuesday} value="tuesday" onChange={(e) => setDaysOfWeek({
+              ...daysOfWeek,
+              tuesday: e.target.checked,
+            })}/>}
+            label="Tuesday"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={daysOfWeek.wednesday} value="wednesday" onChange={(e) => setDaysOfWeek({
+              ...daysOfWeek,
+              wednesday: e.target.checked,
+            })}/>}
+            label="Wednesday"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={daysOfWeek.thursday} value="thursday" onChange={(e) => setDaysOfWeek({
+              ...daysOfWeek,
+              thursday: e.target.checked,
+            })}/>}
+            label="Thursday"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={daysOfWeek.friday} value="friday" onChange={(e) => setDaysOfWeek({
+              ...daysOfWeek,
+              friday: e.target.checked,
+            })}/>}
+            label="Friday"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={daysOfWeek.saturday} value="saturday" onChange={(e) => setDaysOfWeek({
+              ...daysOfWeek,
+              saturday: e.target.checked,
+            })}/>}
+            label="Saturday"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={daysOfWeek.sunday} value="sunday" onChange={(e) => setDaysOfWeek({
+              ...daysOfWeek,
+              sunday: e.target.checked,
+            })}/>}
+            label="Sunday"
+          />
+        </FormGroup>
+        </FormControl>
+        </Box>
+      <Box display="flex" justifyContent="space-between">
+        <FormControl>
+          <Select
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+          >
+            <MenuItem value="morning">Morning (8am-12pm)</MenuItem>
+            <MenuItem value="day">Day (12pm-6pm)</MenuItem>
+            <MenuItem value="evening">Evening (6pm-10pm)</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+    </Box>
   );
 }
