@@ -9,6 +9,6 @@ export const timeAgo = (timestamp: Date, timeOnly?: boolean): string => {
 }
 
 export async function allDepartments() {
-  const departments = await db.selectDistinct({department: coursesTable.course_prefix}).from(coursesTable)
+  const departments = await db.selectDistinct({department: coursesTable.course_prefix}).from(coursesTable).orderBy(coursesTable.course_prefix)
   return departments.map((department) => department.department)
 }

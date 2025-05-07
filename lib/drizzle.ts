@@ -3,6 +3,7 @@ import {
   pgTable,
   serial,
   text,
+  time,
   timestamp,
   uniqueIndex
 } from 'drizzle-orm/pg-core'
@@ -34,8 +35,8 @@ export const schedulesTable = pgTable('schedules', {
   start_date: timestamp('start_date').notNull(),
   end_date: timestamp('end_date').notNull(),
   day_of_week: text('day_of_week'),
-  start_time: timestamp('start_time'),
-  end_time: timestamp('end_time'),
+  start_time: time('start_time'),
+  end_time: time('end_time'),
   course_id: text('course_id').references(() => coursesTable.id),
 }, (schedules) => {
   return {
