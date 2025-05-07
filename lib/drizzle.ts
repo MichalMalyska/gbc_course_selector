@@ -9,37 +9,37 @@ import {
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' })
+const sql = postgres(process.env.POSTGRES_URL!)
 
 export const coursesTable = pgTable('courses', {
   id: serial('id').primaryKey(),
-  courseCode: text('courseCode').notNull(),
-  coursePrefix: text('coursePrefix').notNull(),
-  courseNumber: text('courseNumber').notNull(),
-  courseName: text('courseName').notNull(),
-  courseDeliveryType: text('courseDeliveryType').notNull(),
+  course_code: text('course_code').notNull(),
+  course_prefix: text('course_prefix').notNull(),
+  course_number: text('course_number').notNull(),
+  course_name: text('course_name').notNull(),
+  course_delivery_type: text('course_delivery_type').notNull(),
   prereqs: text('prereqs'),
   hours: text('hours').notNull(),
   fees: text('fees').notNull(),
-  courseDescription: text('courseDescription'),
-  courseLink: text('courseLink'),
+  course_description: text('course_description'),
+  course_link: text('course_link'),
 }, (courses) => {
   return {
-    uniqueIdx: uniqueIndex('unique_idx').on(courses.courseCode),
+    uniqueIdx: uniqueIndex('unique_idx').on(courses.course_code),
   }
 })
 
 export const schedulesTable = pgTable('schedules', {
   id: serial('id').primaryKey(),
-  startDate: timestamp('startDate').notNull(),
-  endDate: timestamp('endDate').notNull(),
-  dayOfWeek: text('dayOfWeek'),
-  startTime: timestamp('startTime'),
-  endTime: timestamp('endTime'),
-  courseId: text('courseId').references(() => coursesTable.id),
+  start_date: timestamp('start_date').notNull(),
+  end_date: timestamp('end_date').notNull(),
+  day_of_week: text('day_of_week'),
+  start_time: timestamp('start_time'),
+  end_time: timestamp('end_time'),
+  course_id: text('course_id').references(() => coursesTable.id),
 }, (schedules) => {
   return {
-    uniqueIdx: uniqueIndex('unique_idx').on(schedules.courseId),
+    unique_idx: uniqueIndex('unique_idx').on(schedules.course_id),
   }
 })
 
