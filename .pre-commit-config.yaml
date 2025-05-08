@@ -1,0 +1,22 @@
+repos:
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        stages: [pre-commit]
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v9.26.0
+    hooks:
+      - id: eslint
+        args: [--fix]
+        stages: [pre-commit]
+  # - repo: local
+  #   hooks:
+  #     - id: tsc
+  #       name: tsc
+  #       entry: npx tsc
+  #       language: system
+  #       files: \.tsx?$
+  #       args: [--noEmit]
+  #       pass_filenames: true
+  #       stages: [pre-commit]

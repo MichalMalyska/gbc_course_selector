@@ -12,35 +12,36 @@ import {
   Select,
   TextField,
 } from "@mui/material";
-import { useState } from "react";
 
 export interface SearchCriteria {
   textSearch: string;
   department: string;
   deliveryType: string;
-  daysOfWeek: string[];
+  daysOfWeek: {
+    monday: boolean;
+    tuesday: boolean;
+    wednesday: boolean;
+    thursday: boolean;
+    friday: boolean;
+    saturday: boolean;
+    sunday: boolean;
+  };
   startTime: string;
 }
 
 interface CourseSearchProps {
   allDepartments: string[];
+  searchCriteria: SearchCriteria;
+  setSearchCriteria: (searchCriteria: SearchCriteria) => void;
 }
 
-export function CourseSearchInputs({ allDepartments }: CourseSearchProps) {
-  const [textSearch, setTextSearch] = useState("");
-  const [department, setDepartment] = useState("HOSF");
-  const [deliveryType, setDeliveryType] = useState("on-campus");
-  const [daysOfWeek, setDaysOfWeek] = useState({
-    monday: false,
-    tuesday: true,
-    wednesday: false,
-    thursday: false,
-    friday: false,
-    saturday: false,
-    sunday: false,
-  });
-  const [startTime, setStartTime] = useState("evening");
-
+export function CourseSearchInputs({
+  allDepartments,
+  searchCriteria,
+  setSearchCriteria,
+}: CourseSearchProps) {
+  const { textSearch, department, deliveryType, daysOfWeek, startTime } =
+    searchCriteria;
   return (
     <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
       <Box
@@ -49,7 +50,9 @@ export function CourseSearchInputs({ allDepartments }: CourseSearchProps) {
         <TextField
           label="Search Courses by Name"
           value={textSearch}
-          onChange={(e) => setTextSearch(e.target.value)}
+          onChange={(e) =>
+            setSearchCriteria({ ...searchCriteria, textSearch: e.target.value })
+          }
         />
       </Box>
       <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -63,7 +66,7 @@ export function CourseSearchInputs({ allDepartments }: CourseSearchProps) {
             )}
             value={department}
             onChange={(e, value) => {
-              setDepartment(value || "");
+              setSearchCriteria({ ...searchCriteria, department: value || "" });
             }}
           />
         </FormControl>
@@ -72,7 +75,12 @@ export function CourseSearchInputs({ allDepartments }: CourseSearchProps) {
         <FormControl sx={{ m: 1, minWidth: 120 }}>
           <Select
             value={deliveryType}
-            onChange={(e) => setDeliveryType(e.target.value)}
+            onChange={(e) =>
+              setSearchCriteria({
+                ...searchCriteria,
+                deliveryType: e.target.value,
+              })
+            }
           >
             <MenuItem value="online">Online</MenuItem>
             <MenuItem value="on-campus">On Campus</MenuItem>
@@ -94,9 +102,12 @@ export function CourseSearchInputs({ allDepartments }: CourseSearchProps) {
                   checked={daysOfWeek.monday}
                   value="monday"
                   onChange={(e) =>
-                    setDaysOfWeek({
-                      ...daysOfWeek,
-                      monday: e.target.checked,
+                    setSearchCriteria({
+                      ...searchCriteria,
+                      daysOfWeek: {
+                        ...daysOfWeek,
+                        monday: e.target.checked,
+                      },
                     })
                   }
                 />
@@ -109,9 +120,12 @@ export function CourseSearchInputs({ allDepartments }: CourseSearchProps) {
                   checked={daysOfWeek.tuesday}
                   value="tuesday"
                   onChange={(e) =>
-                    setDaysOfWeek({
-                      ...daysOfWeek,
-                      tuesday: e.target.checked,
+                    setSearchCriteria({
+                      ...searchCriteria,
+                      daysOfWeek: {
+                        ...daysOfWeek,
+                        tuesday: e.target.checked,
+                      },
                     })
                   }
                 />
@@ -124,9 +138,12 @@ export function CourseSearchInputs({ allDepartments }: CourseSearchProps) {
                   checked={daysOfWeek.wednesday}
                   value="wednesday"
                   onChange={(e) =>
-                    setDaysOfWeek({
-                      ...daysOfWeek,
-                      wednesday: e.target.checked,
+                    setSearchCriteria({
+                      ...searchCriteria,
+                      daysOfWeek: {
+                        ...daysOfWeek,
+                        wednesday: e.target.checked,
+                      },
                     })
                   }
                 />
@@ -139,9 +156,12 @@ export function CourseSearchInputs({ allDepartments }: CourseSearchProps) {
                   checked={daysOfWeek.thursday}
                   value="thursday"
                   onChange={(e) =>
-                    setDaysOfWeek({
-                      ...daysOfWeek,
-                      thursday: e.target.checked,
+                    setSearchCriteria({
+                      ...searchCriteria,
+                      daysOfWeek: {
+                        ...daysOfWeek,
+                        thursday: e.target.checked,
+                      },
                     })
                   }
                 />
@@ -154,9 +174,12 @@ export function CourseSearchInputs({ allDepartments }: CourseSearchProps) {
                   checked={daysOfWeek.friday}
                   value="friday"
                   onChange={(e) =>
-                    setDaysOfWeek({
-                      ...daysOfWeek,
-                      friday: e.target.checked,
+                    setSearchCriteria({
+                      ...searchCriteria,
+                      daysOfWeek: {
+                        ...daysOfWeek,
+                        friday: e.target.checked,
+                      },
                     })
                   }
                 />
@@ -169,9 +192,12 @@ export function CourseSearchInputs({ allDepartments }: CourseSearchProps) {
                   checked={daysOfWeek.saturday}
                   value="saturday"
                   onChange={(e) =>
-                    setDaysOfWeek({
-                      ...daysOfWeek,
-                      saturday: e.target.checked,
+                    setSearchCriteria({
+                      ...searchCriteria,
+                      daysOfWeek: {
+                        ...daysOfWeek,
+                        saturday: e.target.checked,
+                      },
                     })
                   }
                 />
@@ -184,9 +210,12 @@ export function CourseSearchInputs({ allDepartments }: CourseSearchProps) {
                   checked={daysOfWeek.sunday}
                   value="sunday"
                   onChange={(e) =>
-                    setDaysOfWeek({
-                      ...daysOfWeek,
-                      sunday: e.target.checked,
+                    setSearchCriteria({
+                      ...searchCriteria,
+                      daysOfWeek: {
+                        ...daysOfWeek,
+                        sunday: e.target.checked,
+                      },
                     })
                   }
                 />
@@ -200,7 +229,12 @@ export function CourseSearchInputs({ allDepartments }: CourseSearchProps) {
         <FormControl>
           <Select
             value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
+            onChange={(e) =>
+              setSearchCriteria({
+                ...searchCriteria,
+                startTime: e.target.value,
+              })
+            }
           >
             <MenuItem value="morning">Morning (8am-12pm)</MenuItem>
             <MenuItem value="day">Day (12pm-6pm)</MenuItem>
