@@ -1,7 +1,4 @@
 import { CourseSearchClient } from "@/components/course-search-client";
-import CourseSelector from "@/components/course-selector";
-import CourseSelectorPlaceholder from "@/components/course-selector-placeholder";
-import RefreshButton from "@/components/refresh-button";
 import { Suspense } from "react";
 import { allDepartments } from "./search";
 export const dynamic = "force-dynamic";
@@ -15,12 +12,6 @@ export default async function Home() {
       </h1>
       <Suspense fallback={<div>Loading...</div>}>
         <CourseSearchClient allDepartments={departments} />
-      </Suspense>
-      <div className="refresh-button">
-        <RefreshButton />
-      </div>
-      <Suspense fallback={<CourseSelectorPlaceholder />}>
-        <CourseSelector />
       </Suspense>
     </main>
   );

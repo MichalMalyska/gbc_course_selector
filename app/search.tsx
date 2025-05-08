@@ -1,7 +1,7 @@
 "use server";
 
 import { coursesTable, db, schedulesTable } from "@/lib/drizzle";
-import { and, between, eq, isNotNull, like, or } from "drizzle-orm";
+import { and, between, eq, gt, ilike, isNotNull, lt, or } from "drizzle-orm";
 
 export async function allDepartments() {
   const departments = await db
@@ -33,7 +33,7 @@ export async function allRunningCourses() {
 export async function searchCourseSessions(
   textSearch: string | null,
   department: string | null,
-  deliveryType: string | null,
+  deliveryType: string | null, // "Online" or "On Campus"
   startTime: string | null,
   daysOfWeek: {
     monday: boolean;
@@ -45,31 +45,34 @@ export async function searchCourseSessions(
     sunday: boolean;
   },
 ) {
-  // Translate start time string to a time
-  const time_translator: Record<string, { start: string; end: string }> = {
-    morning: { start: "00:00:00", end: "12:00:00" },
-    afternoon: { start: "12:00:00", end: "18:00:00" },
-    evening: { start: "18:00:00", end: "23:59:59" },
-  };
-
   const conditions = [isNotNull(schedulesTable.start_date)];
+  // Translate start time string to a time
+  if (startTime) {
+    if (startTime === "morning") {
+      conditions.push(lt(schedulesTable.start_time, "12:00:00"));
+    } else if (startTime === "afternoon") {
+      conditions.push(
+        between(schedulesTable.start_time, "12:00:00", "18:00:00"),
+      );
+    } else if (startTime === "evening") {
+      conditions.push(gt(schedulesTable.start_time, "18:00:00"));
+    }
+  }
+
   if (textSearch) {
-    conditions.push(like(coursesTable.course_name, `%${textSearch}%`));
+    conditions.push(ilike(coursesTable.course_name, `%${textSearch}%`));
   }
   if (department) {
     conditions.push(eq(coursesTable.course_prefix, department));
   }
   if (deliveryType) {
-    conditions.push(eq(coursesTable.course_delivery_type, deliveryType));
-  }
-  if (startTime) {
-    conditions.push(
-      between(
-        schedulesTable.start_time,
-        time_translator[startTime].start,
-        time_translator[startTime].end,
-      ),
-    );
+    let queryDeliveryType = deliveryType;
+    if (deliveryType.toLowerCase() === "online") {
+      queryDeliveryType = "Online";
+    } else if (deliveryType.toLowerCase() === "on-campus") {
+      queryDeliveryType = "On Campus";
+    }
+    conditions.push(eq(coursesTable.course_delivery_type, queryDeliveryType));
   }
   // Days of week conditions creation
   // Needs to create an OR statement for each of the days of the week that is true and push just one condition that is the OR statement to the conditions array
@@ -77,7 +80,10 @@ export async function searchCourseSessions(
     const daysOfWeekConditions = [];
     for (const day in daysOfWeek) {
       if (daysOfWeek[day as keyof typeof daysOfWeek]) {
-        daysOfWeekConditions.push(eq(schedulesTable.day_of_week, day));
+        const capitalizedDay = day.charAt(0).toUpperCase() + day.slice(1);
+        daysOfWeekConditions.push(
+          eq(schedulesTable.day_of_week, capitalizedDay),
+        );
       }
     }
     if (daysOfWeekConditions.length > 1) {
@@ -95,6 +101,5 @@ export async function searchCourseSessions(
     .where(and(...conditions))
     .leftJoin(coursesTable, eq(schedulesTable.course_id, coursesTable.id));
   const filteredSessions = await filteredSessionsQuery;
-
   return filteredSessions;
 }
