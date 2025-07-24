@@ -9,7 +9,7 @@ import TableRow from "@mui/material/TableRow"
 
 export default function CourseSelector({ searchResults }: { searchResults: any[] }) {
   return (
-    <div>
+    <div className="w-full">
       <CourseSearchResults searchResults={searchResults} />
     </div>
   )
@@ -17,29 +17,29 @@ export default function CourseSelector({ searchResults }: { searchResults: any[]
 
 export function CourseSearchResults({ searchResults }: { searchResults: any[] }) {
   return (
-    <TableContainer component={Paper} sx={{ width: "75%", margin: "auto", minHeight: "300px" }}>
+    <TableContainer component={Paper} className="w-11/12 md:w-3/4 mx-auto overflow-x-auto">
       <Table sx={{ minWidth: 650 }} aria-label="simple table">
         <TableHead>
           <TableRow>
             <TableCell>
               <b>Course Name</b>
             </TableCell>
-            <TableCell sx={{ whiteSpace: "nowrap" }}>
+            <TableCell>
               <b>Department</b>
             </TableCell>
-            <TableCell sx={{ whiteSpace: "nowrap" }}>
+            <TableCell>
               <b>Day</b>
             </TableCell>
-            <TableCell sx={{ whiteSpace: "nowrap" }}>
+            <TableCell>
               <b>Time</b>
             </TableCell>
-            <TableCell sx={{ whiteSpace: "nowrap" }}>
+            <TableCell>
               <b>Dates</b>
             </TableCell>
-            <TableCell sx={{ whiteSpace: "nowrap" }}>
+            <TableCell>
               <b>Delivery Type</b>
             </TableCell>
-            <TableCell sx={{ maxHeight: "100px", overflowY: "auto", display: "block" }}>
+            <TableCell>
               <b>Description</b>
             </TableCell>
           </TableRow>
@@ -56,9 +56,9 @@ export function CourseSearchResults({ searchResults }: { searchResults: any[] })
                     {result.courses?.course_name}
                   </Link>
                 </TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap" }}>{result.courses?.course_prefix}</TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap" }}>{result.schedules.day_of_week}</TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap" }}>
+                <TableCell>{result.courses?.course_prefix}</TableCell>
+                <TableCell>{result.schedules.day_of_week}</TableCell>
+                <TableCell>
                   {result.schedules.start_time
                     ? new Date(`1970-01-01T${result.schedules.start_time}`).toLocaleTimeString([], {
                         hour: "2-digit",
@@ -75,7 +75,7 @@ export function CourseSearchResults({ searchResults }: { searchResults: any[] })
                       ? ""
                       : "N/A"}
                 </TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap" }}>
+                <TableCell>
                   {result.schedules.start_date
                     ? new Date(result.schedules.start_date).toLocaleDateString([], { month: "short", day: "numeric" })
                     : "N/A"}
@@ -86,7 +86,7 @@ export function CourseSearchResults({ searchResults }: { searchResults: any[] })
                       ? ""
                       : "N/A"}
                 </TableCell>
-                <TableCell sx={{ whiteSpace: "nowrap" }}>{result.courses?.course_delivery_type}</TableCell>
+                <TableCell>{result.courses?.course_delivery_type}</TableCell>
                 <TableCell
                   sx={{
                     maxHeight: "100px",

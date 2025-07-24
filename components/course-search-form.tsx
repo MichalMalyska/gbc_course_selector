@@ -38,7 +38,13 @@ interface CourseSearchProps {
 export function CourseSearchInputs({ allDepartments, searchCriteria, setSearchCriteria }: CourseSearchProps) {
   const { textSearch, department, deliveryType, daysOfWeek, startTime } = searchCriteria
   return (
-    <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: { xs: "column", md: "row" },
+        alignItems: "center",
+      }}
+    >
       <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <TextField
           label="Search Courses by Name"
