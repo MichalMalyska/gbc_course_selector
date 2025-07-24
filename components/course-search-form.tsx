@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   Autocomplete,
@@ -11,48 +11,39 @@ import {
   MenuItem,
   Select,
   TextField,
-} from "@mui/material";
+} from "@mui/material"
 
 export interface SearchCriteria {
-  textSearch: string;
-  department: string;
-  deliveryType: string;
+  textSearch: string
+  department: string
+  deliveryType: string
   daysOfWeek: {
-    monday: boolean;
-    tuesday: boolean;
-    wednesday: boolean;
-    thursday: boolean;
-    friday: boolean;
-    saturday: boolean;
-    sunday: boolean;
-  };
-  startTime: string;
+    monday: boolean
+    tuesday: boolean
+    wednesday: boolean
+    thursday: boolean
+    friday: boolean
+    saturday: boolean
+    sunday: boolean
+  }
+  startTime: string
 }
 
 interface CourseSearchProps {
-  allDepartments: string[];
-  searchCriteria: SearchCriteria;
-  setSearchCriteria: (searchCriteria: SearchCriteria) => void;
+  allDepartments: string[]
+  searchCriteria: SearchCriteria
+  setSearchCriteria: (searchCriteria: SearchCriteria) => void
 }
 
-export function CourseSearchInputs({
-  allDepartments,
-  searchCriteria,
-  setSearchCriteria,
-}: CourseSearchProps) {
-  const { textSearch, department, deliveryType, daysOfWeek, startTime } =
-    searchCriteria;
+export function CourseSearchInputs({ allDepartments, searchCriteria, setSearchCriteria }: CourseSearchProps) {
+  const { textSearch, department, deliveryType, daysOfWeek, startTime } = searchCriteria
   return (
     <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
-      <Box
-        sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
-      >
+      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
         <TextField
           label="Search Courses by Name"
           value={textSearch}
-          onChange={(e) =>
-            setSearchCriteria({ ...searchCriteria, textSearch: e.target.value })
-          }
+          onChange={(e) => setSearchCriteria({ ...searchCriteria, textSearch: e.target.value })}
         />
       </Box>
       <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -61,12 +52,10 @@ export function CourseSearchInputs({
             disablePortal
             options={allDepartments}
             sx={{ width: 300 }}
-            renderInput={(params) => (
-              <TextField {...params} label="Department" />
-            )}
+            renderInput={(params) => <TextField {...params} label="Department" />}
             value={department}
             onChange={(e, value) => {
-              setSearchCriteria({ ...searchCriteria, department: value || "" });
+              setSearchCriteria({ ...searchCriteria, department: value || "" })
             }}
           />
         </FormControl>
@@ -89,11 +78,7 @@ export function CourseSearchInputs({
         </FormControl>
       </Box>
       <Box sx={{ display: "flex" }}>
-        <FormControl
-          sx={{ m: 7, width: "100%" }}
-          component="fieldset"
-          variant="standard"
-        >
+        <FormControl sx={{ m: 7, width: "100%" }} component="fieldset" variant="standard">
           <FormLabel component="legend">Day of the Week</FormLabel>
           <FormGroup>
             <FormControlLabel
@@ -243,5 +228,5 @@ export function CourseSearchInputs({
         </FormControl>
       </Box>
     </Box>
-  );
+  )
 }
