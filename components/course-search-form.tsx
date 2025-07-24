@@ -43,6 +43,7 @@ export function CourseSearchInputs({ allDepartments, searchCriteria, setSearchCr
         display: "flex",
         flexDirection: { xs: "column", md: "row" },
         alignItems: "center",
+        justifyContent: "center",
       }}
     >
       <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
