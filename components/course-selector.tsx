@@ -7,6 +7,42 @@ import TableContainer from "@mui/material/TableContainer"
 import TableHead from "@mui/material/TableHead"
 import TableRow from "@mui/material/TableRow"
 
+const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+function formatScheduleDate(value: Date | string | null | undefined) {
+  if (!value) {
+    return "N/A"
+  }
+
+  const rawDate = typeof value === "string" ? value.split("T")[0] : value.toISOString().slice(0, 10)
+  const [year, month, day] = rawDate.split("-").map(Number)
+
+  if (!year || !month || !day) {
+    return "N/A"
+  }
+
+  return `${monthNames[month - 1]} ${day}`
+}
+
+function formatScheduleTime(value: string | null | undefined) {
+  if (!value) {
+    return "N/A"
+  }
+
+  const [hoursString, minutesString] = value.split(":")
+  const hours = Number(hoursString)
+  const minutes = Number(minutesString)
+
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return value
+  }
+
+  const period = hours >= 12 ? "PM" : "AM"
+  const normalizedHours = hours % 12 || 12
+
+  return `${normalizedHours}:${minutesString.padStart(2, "0")} ${period}`
+}
+
 export default function CourseSelector({ searchResults }: { searchResults: any[] }) {
   return (
     <div className="w-full">
@@ -59,29 +95,19 @@ export function CourseSearchResults({ searchResults }: { searchResults: any[] })
                 <TableCell>{result.courses?.course_prefix}</TableCell>
                 <TableCell>{result.schedules.day_of_week}</TableCell>
                 <TableCell>
-                  {result.schedules.start_time
-                    ? new Date(`1970-01-01T${result.schedules.start_time}`).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
-                    : "N/A"}
+                  {formatScheduleTime(result.schedules.start_time)}
                   {result.schedules.start_time && result.schedules.end_time ? " - " : ""}
                   {result.schedules.end_time
-                    ? new Date(`1970-01-01T${result.schedules.end_time}`).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
+                    ? formatScheduleTime(result.schedules.end_time)
                     : result.schedules.start_time
                       ? ""
                       : "N/A"}
                 </TableCell>
                 <TableCell>
-                  {result.schedules.start_date
-                    ? new Date(result.schedules.start_date).toLocaleDateString([], { month: "short", day: "numeric" })
-                    : "N/A"}
+                  {formatScheduleDate(result.schedules.start_date)}
                   {result.schedules.start_date && result.schedules.end_date ? " - " : ""}
                   {result.schedules.end_date
-                    ? new Date(result.schedules.end_date).toLocaleDateString([], { month: "short", day: "numeric" })
+                    ? formatScheduleDate(result.schedules.end_date)
                     : result.schedules.start_date
                       ? ""
                       : "N/A"}

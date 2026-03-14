@@ -229,7 +229,7 @@ export function CourseSearchInputs({ allDepartments, searchCriteria, setSearchCr
             }
           >
             <MenuItem value="morning">Morning (8am-12pm)</MenuItem>
-            <MenuItem value="day">Day (12pm-6pm)</MenuItem>
+            <MenuItem value="afternoon">Day (12pm-6pm)</MenuItem>
             <MenuItem value="evening">Evening (6pm-10pm)</MenuItem>
           </Select>
         </FormControl>

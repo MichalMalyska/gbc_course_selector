@@ -1,5 +1,5 @@
 import { InferSelectModel } from "drizzle-orm"
-import { pgTable, serial, text, time, timestamp, uniqueIndex } from "drizzle-orm/pg-core"
+import { date, integer, pgTable, serial, text, time, timestamp, uniqueIndex } from "drizzle-orm/pg-core"
 import { drizzle } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
 
@@ -25,31 +25,26 @@ export const coursesTable = pgTable(
     fees: text("fees").notNull(),
     course_description: text("course_description"),
     course_link: text("course_link"),
+    last_seen_at: timestamp("last_seen_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
   },
   (courses) => {
     return {
-      uniqueIdx: uniqueIndex("unique_idx").on(courses.course_code),
+      uniqueIdx: uniqueIndex("courses_course_code_unique_idx").on(courses.course_code),
     }
   }
 )
 
-export const schedulesTable = pgTable(
-  "schedules",
-  {
-    id: serial("id").primaryKey(),
-    start_date: timestamp("start_date").notNull(),
-    end_date: timestamp("end_date").notNull(),
-    day_of_week: text("day_of_week"),
-    start_time: time("start_time"),
-    end_time: time("end_time"),
-    course_id: text("course_id").references(() => coursesTable.id),
-  },
-  (schedules) => {
-    return {
-      unique_idx: uniqueIndex("unique_idx").on(schedules.course_id),
-    }
-  }
-)
+export const schedulesTable = pgTable("schedules", {
+  id: serial("id").primaryKey(),
+  start_date: date("start_date", { mode: "string" }).notNull(),
+  end_date: date("end_date", { mode: "string" }).notNull(),
+  day_of_week: text("day_of_week"),
+  start_time: time("start_time"),
+  end_time: time("end_time"),
+  course_id: integer("course_id")
+    .notNull()
+    .references(() => coursesTable.id, { onDelete: "cascade" }),
+})
 
 export type Course = InferSelectModel<typeof coursesTable>
 export type Schedule = InferSelectModel<typeof schedulesTable>
