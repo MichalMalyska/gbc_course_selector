@@ -167,7 +167,7 @@ function EmptyState({ message }: { message: string }) {
 }
 
 export default function CourseSelector({ searchResults, isLoading, searchError }: CourseSelectorProps) {
-  if (isLoading) {
+  if (isLoading && !searchResults.length) {
     return <LoadingState />
   }
 
@@ -231,14 +231,14 @@ export default function CourseSelector({ searchResults, isLoading, searchError }
 
       <div className="surface-panel hidden overflow-hidden rounded-[2rem] md:block">
         <div className="overflow-x-auto">
-          <table className="min-w-full border-separate border-spacing-0">
+          <table className="min-w-[1180px] w-full table-fixed border-separate border-spacing-0">
             <colgroup>
-              <col className="w-[28%]" />
+              <col className="w-[26%]" />
+              <col className="w-[11%]" />
+              <col className="w-[15%]" />
+              <col className="w-[15%]" />
               <col className="w-[12%]" />
-              <col className="w-[14%]" />
-              <col className="w-[16%]" />
-              <col className="w-[12%]" />
-              <col className="w-[18%]" />
+              <col className="w-[21%]" />
             </colgroup>
             <thead
               style={{
