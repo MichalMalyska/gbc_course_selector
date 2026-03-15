@@ -25,7 +25,6 @@ export function CourseSearchClient({ allDepartments }: { allDepartments: string[
   const [debouncedTextSearch, setDebouncedTextSearch] = useState(searchCriteria.textSearch)
   const [isLoading, setIsLoading] = useState(true)
   const [searchError, setSearchError] = useState<string | null>(null)
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null)
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -53,7 +52,6 @@ export function CourseSearchClient({ allDepartments }: { allDepartments: string[
 
         if (!isCancelled) {
           setSearchResults(results)
-          setLastUpdated(new Date().toISOString())
         }
       } catch (error) {
         console.error("Error fetching search results:", error)
@@ -150,15 +148,6 @@ export function CourseSearchClient({ allDepartments }: { allDepartments: string[
     })
   }
 
-  const formattedUpdatedAt = lastUpdated
-    ? new Intl.DateTimeFormat("en-CA", {
-        hour: "numeric",
-        minute: "2-digit",
-        month: "short",
-        day: "numeric",
-      }).format(new Date(lastUpdated))
-    : null
-
   return (
     <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
       <aside className="lg:sticky lg:top-6 lg:self-start">
@@ -177,13 +166,9 @@ export function CourseSearchClient({ allDepartments }: { allDepartments: string[
               <h2 className="text-2xl font-semibold tracking-tight text-[color:var(--text-primary)]">
                 {searchResults.length} matches
               </h2>
-              <p className="mt-1 text-xs sm:text-sm text-[color:var(--text-secondary)]">
-                {searchError
-                  ? searchError
-                  : formattedUpdatedAt
-                    ? `Updated ${formattedUpdatedAt}`
-                    : "Fetching the latest course list."}
-              </p>
+              {searchError ? (
+                <p className="mt-1 text-xs sm:text-sm text-[color:var(--text-secondary)]">{searchError}</p>
+              ) : null}
             </div>
             <div className="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
               <span
