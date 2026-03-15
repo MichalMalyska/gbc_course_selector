@@ -4,6 +4,12 @@ import { type CourseSearchResult } from "@/lib/course-search"
 import Link from "next/link"
 import { useState } from "react"
 
+type CourseSelectorProps = {
+  searchResults: CourseSearchResult[]
+  isLoading: boolean
+  searchError: string | null
+}
+
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 function formatScheduleDate(value: Date | string | null | undefined) {
@@ -97,20 +103,28 @@ function DescriptionBlock({
 
   return (
     <div className="space-y-2">
-      <p className="text-sm leading-6 text-slate-600">
+      <p className="text-sm leading-6 text-[color:var(--text-secondary)]">
         {isExpanded ? fullText : truncateText(fullText, previewLength)}
       </p>
       {needsToggle ? (
         <button
           type="button"
           onClick={() => toggleExpanded(itemId)}
-          className="text-sm font-medium text-slate-900 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-700"
+          className="text-sm font-medium text-[color:var(--text-primary)] underline underline-offset-4 transition hover:text-[color:var(--accent-strong)]"
         >
           {isExpanded ? "Show less" : "Show more"}
         </button>
       ) : null}
     </div>
   )
+}
+
+function buildCourseCode(course: CourseSearchResult["courses"]) {
+  if (!course) {
+    return "Course"
+  }
+
+  return course.course_code || course.course_prefix || "Course"
 }
 
 function CourseTitle({
@@ -137,16 +151,13 @@ function LoadingCards() {
   return (
     <div className="grid gap-4 lg:hidden">
       {[0, 1, 2].map((item) => (
-        <div
-          key={item}
-          className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.45)]"
-        >
-          <div className="h-6 w-2/3 animate-pulse rounded-full bg-slate-200" />
-          <div className="mt-4 h-4 w-1/2 animate-pulse rounded-full bg-slate-200" />
+        <div key={item} className="surface-panel rounded-3xl p-5">
+          <div className="skeleton-block h-6 w-2/3 rounded-full" />
+          <div className="mt-4 skeleton-block h-4 w-1/2 rounded-full" />
           <div className="mt-6 grid gap-3">
-            <div className="h-4 w-full animate-pulse rounded-full bg-slate-200" />
-            <div className="h-4 w-full animate-pulse rounded-full bg-slate-200" />
-            <div className="h-4 w-5/6 animate-pulse rounded-full bg-slate-200" />
+            <div className="skeleton-block h-4 w-full rounded-full" />
+            <div className="skeleton-block h-4 w-full rounded-full" />
+            <div className="skeleton-block h-4 w-5/6 rounded-full" />
           </div>
         </div>
       ))}
@@ -156,8 +167,8 @@ function LoadingCards() {
 
 function LoadingTable() {
   return (
-    <div className="hidden overflow-hidden rounded-3xl border border-slate-200 bg-white lg:block">
-      <div className="grid grid-cols-[minmax(0,1.2fr)_0.8fr_0.9fr_0.9fr_0.8fr_1.6fr] gap-4 border-b border-slate-200 bg-slate-100 px-6 py-4 text-sm font-semibold text-slate-600">
+    <div className="surface-panel hidden overflow-hidden rounded-3xl lg:block">
+      <div className="grid grid-cols-[minmax(0,1.2fr)_0.8fr_0.9fr_0.9fr_0.8fr_1.6fr] gap-4 border-b border-[color:var(--border)] bg-[color:var(--surface-muted)] px-6 py-4 text-sm font-semibold text-[color:var(--text-secondary)]">
         <span>Course</span>
         <span>Day</span>
         <span>Time</span>
@@ -168,10 +179,10 @@ function LoadingTable() {
       {[0, 1, 2].map((item) => (
         <div
           key={item}
-          className="grid grid-cols-[minmax(0,1.2fr)_0.8fr_0.9fr_0.9fr_0.8fr_1.6fr] gap-4 border-b border-slate-100 px-6 py-5"
+          className="grid grid-cols-[minmax(0,1.2fr)_0.8fr_0.9fr_0.9fr_0.8fr_1.6fr] gap-4 border-b border-[color:var(--border)] px-6 py-5 last:border-b-0"
         >
           {[0, 1, 2, 3, 4, 5].map((cell) => (
-            <div key={cell} className="h-4 animate-pulse rounded-full bg-slate-200" />
+            <div key={cell} className="skeleton-block h-4 rounded-full" />
           ))}
         </div>
       ))}
@@ -179,13 +190,16 @@ function LoadingTable() {
   )
 }
 
-export default function CourseSelector({
-  searchResults,
-  isLoading,
-}: {
-  searchResults: CourseSearchResult[]
-  isLoading: boolean
-}) {
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="surface-panel rounded-3xl px-6 py-12 text-center">
+      <h3 className="text-lg font-semibold text-[color:var(--text-primary)]">No matching courses</h3>
+      <p className="mt-2 text-sm text-[color:var(--text-secondary)]">{message}</p>
+    </div>
+  )
+}
+
+export default function CourseSelector({ searchResults, isLoading, searchError }: CourseSelectorProps) {
   const [expandedIds, setExpandedIds] = useState<number[]>([])
 
   const toggleExpanded = (itemId: number) => {
@@ -203,13 +217,12 @@ export default function CourseSelector({
     )
   }
 
+  if (searchError) {
+    return <EmptyState message={searchError} />
+  }
+
   if (!searchResults.length) {
-    return (
-      <div className="rounded-3xl border border-dashed border-slate-300 bg-white/80 px-6 py-12 text-center shadow-[0_20px_45px_-35px_rgba(15,23,42,0.35)]">
-        <h3 className="text-lg font-semibold text-slate-900">No matching courses</h3>
-        <p className="mt-2 text-sm text-slate-500">Try clearing a day, time, or department filter.</p>
-      </div>
-    )
+    return <EmptyState message="Try clearing a day, time, or department filter." />
   }
 
   return (
@@ -220,39 +233,33 @@ export default function CourseSelector({
           const schedule = result.schedules
 
           return (
-            <article
-              key={schedule.id}
-              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.45)]"
-            >
+            <article key={schedule.id} className="surface-panel rounded-3xl p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <CourseTitle
                     courseName={course?.course_name || "Untitled course"}
                     courseLink={course?.course_link}
-                    className="text-lg font-semibold text-slate-950 underline decoration-slate-300 underline-offset-4"
+                    className="text-lg font-semibold text-[color:var(--text-primary)] underline underline-offset-4"
                   />
-                  <p className="mt-1 text-sm text-slate-500">
-                    {course?.course_code || course?.course_prefix || "Course"} •{" "}
-                    {course?.course_delivery_type || "Delivery not listed"}
+                  <p className="mt-1 text-sm text-[color:var(--text-muted)]">
+                    {buildCourseCode(course)} • {course?.course_delivery_type || "Delivery not listed"}
                   </p>
                 </div>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                  {schedule.day_of_week || "Flexible"}
-                </span>
+                <span className="chip">{schedule.day_of_week || "Flexible"}</span>
               </div>
 
-              <dl className="mt-5 grid grid-cols-2 gap-4 text-sm text-slate-600">
+              <dl className="mt-5 grid grid-cols-2 gap-4 text-sm text-[color:var(--text-secondary)]">
                 <div>
-                  <dt className="font-medium text-slate-900">Time</dt>
+                  <dt className="font-medium text-[color:var(--text-primary)]">Time</dt>
                   <dd className="mt-1">{scheduleTimeRange(result)}</dd>
                 </div>
                 <div>
-                  <dt className="font-medium text-slate-900">Dates</dt>
+                  <dt className="font-medium text-[color:var(--text-primary)]">Dates</dt>
                   <dd className="mt-1">{scheduleDateRange(result)}</dd>
                 </div>
               </dl>
 
-              <div className="mt-5 border-t border-slate-100 pt-4">
+              <div className="mt-5 border-t border-[color:var(--border)] pt-4">
                 <DescriptionBlock
                   description={course?.course_description}
                   itemId={schedule.id}
@@ -266,8 +273,8 @@ export default function CourseSelector({
         })}
       </div>
 
-      <div className="hidden overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_60px_-45px_rgba(15,23,42,0.45)] lg:block">
-        <div className="grid grid-cols-[minmax(0,1.2fr)_0.8fr_0.9fr_0.9fr_0.8fr_1.6fr] gap-4 border-b border-slate-200 bg-slate-100 px-6 py-4 text-sm font-semibold text-slate-600">
+      <div className="surface-panel hidden overflow-hidden rounded-3xl lg:block">
+        <div className="grid min-w-[1180px] grid-cols-[minmax(0,1.2fr)_0.8fr_0.9fr_0.9fr_0.8fr_1.6fr] gap-4 border-b border-[color:var(--border)] bg-[color:var(--surface-muted)] px-6 py-4 text-sm font-semibold text-[color:var(--text-secondary)]">
           <span>Course</span>
           <span>Day</span>
           <span>Time</span>
@@ -283,22 +290,22 @@ export default function CourseSelector({
           return (
             <div
               key={schedule.id}
-              className="grid grid-cols-[minmax(0,1.2fr)_0.8fr_0.9fr_0.9fr_0.8fr_1.6fr] gap-4 border-b border-slate-100 px-6 py-5 align-top last:border-b-0"
+              className="grid min-w-[1180px] grid-cols-[minmax(0,1.2fr)_0.8fr_0.9fr_0.9fr_0.8fr_1.6fr] gap-4 border-b border-[color:var(--border)] px-6 py-5 align-top last:border-b-0"
             >
               <div className="min-w-0">
                 <CourseTitle
                   courseName={course?.course_name || "Untitled course"}
                   courseLink={course?.course_link}
-                  className="block text-base font-semibold text-slate-950 underline decoration-slate-300 underline-offset-4"
+                  className="block text-base font-semibold text-[color:var(--text-primary)] underline underline-offset-4"
                 />
-                <p className="mt-2 text-sm text-slate-500">
-                  {course?.course_code || course?.course_prefix || "Course"}
-                </p>
+                <p className="mt-2 text-sm text-[color:var(--text-muted)]">{buildCourseCode(course)}</p>
               </div>
-              <div className="text-sm text-slate-700">{schedule.day_of_week || "Flexible"}</div>
-              <div className="text-sm text-slate-700">{scheduleTimeRange(result)}</div>
-              <div className="text-sm text-slate-700">{scheduleDateRange(result)}</div>
-              <div className="text-sm text-slate-700">{course?.course_delivery_type || "Not listed"}</div>
+              <div className="text-sm text-[color:var(--text-secondary)]">{schedule.day_of_week || "Flexible"}</div>
+              <div className="text-sm text-[color:var(--text-secondary)]">{scheduleTimeRange(result)}</div>
+              <div className="text-sm text-[color:var(--text-secondary)]">{scheduleDateRange(result)}</div>
+              <div className="text-sm text-[color:var(--text-secondary)]">
+                {course?.course_delivery_type || "Not listed"}
+              </div>
               <DescriptionBlock
                 description={course?.course_description}
                 itemId={schedule.id}

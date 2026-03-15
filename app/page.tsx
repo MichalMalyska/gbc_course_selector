@@ -1,4 +1,6 @@
 import { CourseSearchClient } from "@/components/course-search-client"
+import CourseSelectorPlaceholder from "@/components/course-selector-placeholder"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Suspense } from "react"
 import { allDepartments } from "./search"
 
@@ -8,21 +10,28 @@ export default async function Home() {
   try {
     const departments = await allDepartments()
     return (
-      <main className="min-h-screen px-4 py-5 sm:px-6 lg:px-8">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-          <header className="rounded-3xl border border-slate-200/80 bg-white/90 px-5 py-5 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.55)] sm:px-6">
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl lg:text-5xl">
-              George Brown Course Scheduler
-            </h1>
+      <main className="min-h-screen px-3 py-4 sm:px-4 sm:py-6 lg:px-5 xl:px-6">
+        <div className="mx-auto flex w-full max-w-[1680px] flex-col gap-6">
+          <header className="surface-page rounded-3xl px-5 py-5 sm:px-6">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-3">
+                <p className="text-sm font-medium uppercase tracking-[0.24em] text-[color:var(--text-muted)]">
+                  Course Planning Utility
+                </p>
+                <div className="space-y-2">
+                  <h1 className="text-3xl font-semibold tracking-tight text-[color:var(--text-primary)] sm:text-4xl lg:text-5xl">
+                    George Brown Course Search
+                  </h1>
+                  <p className="max-w-3xl text-sm leading-6 text-[color:var(--text-secondary)] sm:text-base">
+                    Search current offerings by course, department, delivery type, day, and time window.
+                  </p>
+                </div>
+              </div>
+              <ThemeToggle />
+            </div>
           </header>
 
-          <Suspense
-            fallback={
-              <div className="rounded-3xl border border-slate-200/80 bg-white/90 px-6 py-10 text-sm text-slate-500 shadow-[0_18px_45px_-35px_rgba(15,23,42,0.45)]">
-                Loading scheduler...
-              </div>
-            }
-          >
+          <Suspense fallback={<CourseSelectorPlaceholder />}>
             <CourseSearchClient allDepartments={departments} />
           </Suspense>
         </div>
@@ -33,8 +42,11 @@ export default async function Home() {
     return (
       <main className="min-h-screen px-4 py-5 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <div className="rounded-3xl border border-rose-200 bg-white px-6 py-10 text-rose-700 shadow-[0_18px_45px_-35px_rgba(15,23,42,0.45)]">
-            Something went wrong.
+          <div className="surface-panel rounded-3xl px-6 py-10 text-center">
+            <h1 className="text-2xl font-semibold text-[color:var(--text-primary)]">Something went wrong.</h1>
+            <p className="mt-3 text-sm text-[color:var(--text-secondary)]">
+              The course data could not be loaded right now.
+            </p>
           </div>
         </div>
       </main>

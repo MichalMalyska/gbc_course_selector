@@ -24,6 +24,7 @@ export function CourseSearchClient({ allDepartments }: { allDepartments: string[
   const [searchResults, setSearchResults] = useState<CourseSearchResult[]>([])
   const [debouncedTextSearch, setDebouncedTextSearch] = useState(searchCriteria.textSearch)
   const [isLoading, setIsLoading] = useState(true)
+  const [searchError, setSearchError] = useState<string | null>(null)
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -38,6 +39,7 @@ export function CourseSearchClient({ allDepartments }: { allDepartments: string[
 
     async function fetchSearchResults() {
       setIsLoading(true)
+      setSearchError(null)
 
       try {
         const results = await searchCourseSessions(
@@ -54,6 +56,7 @@ export function CourseSearchClient({ allDepartments }: { allDepartments: string[
       } catch (error) {
         console.error("Error fetching search results:", error)
         if (!isCancelled) {
+          setSearchError("The course list could not be refreshed.")
           setSearchResults([])
         }
       } finally {
@@ -156,15 +159,20 @@ export function CourseSearchClient({ allDepartments }: { allDepartments: string[
       </aside>
 
       <section className="min-w-0 space-y-4">
-        <div className="rounded-3xl border border-slate-200/80 bg-white/90 p-4 shadow-[0_18px_45px_-35px_rgba(15,23,42,0.45)]">
-          <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="surface-panel rounded-3xl p-4">
+          <div className="flex flex-col gap-3 border-b border-[color:var(--border)] pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500">Results</p>
-              <h2 className="text-2xl font-semibold tracking-tight text-slate-900">{searchResults.length} matches</h2>
+              <p className="text-sm font-medium text-[color:var(--text-muted)]">Results</p>
+              <h2 className="text-2xl font-semibold tracking-tight text-[color:var(--text-primary)]">
+                {searchResults.length} matches
+              </h2>
+              {searchError ? (
+                <p className="mt-1 text-xs sm:text-sm text-[color:var(--text-secondary)]">{searchError}</p>
+              ) : null}
             </div>
-            <div className="flex items-center gap-2 text-sm text-slate-500">
+            <div className="flex items-center gap-2 text-sm text-[color:var(--text-secondary)]">
               <span
-                className={`h-2.5 w-2.5 rounded-full ${isLoading ? "animate-pulse bg-amber-500" : "bg-emerald-500"}`}
+                className={`h-2.5 w-2.5 rounded-full ${isLoading ? "animate-pulse bg-[color:var(--accent)]" : "bg-[color:var(--accent-strong)]"}`}
               />
               {isLoading ? "Updating" : "Up to date"}
             </div>
@@ -172,20 +180,17 @@ export function CourseSearchClient({ allDepartments }: { allDepartments: string[
 
           <div className="mt-4 flex flex-wrap gap-2">
             {activeFilters.map((filter) => (
-              <button
-                key={filter.id}
-                type="button"
-                onClick={filter.onRemove}
-                className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-white"
-              >
+              <button key={filter.id} type="button" onClick={filter.onRemove} className="chip">
                 {filter.label} ×
               </button>
             ))}
-            {activeFilters.length === 0 ? <span className="text-sm text-slate-500">No active filters.</span> : null}
+            {activeFilters.length === 0 ? (
+              <span className="text-sm text-[color:var(--text-muted)]">No active filters.</span>
+            ) : null}
           </div>
         </div>
 
-        <CourseSelector searchResults={searchResults} isLoading={isLoading} />
+        <CourseSelector searchResults={searchResults} isLoading={isLoading} searchError={searchError} />
       </section>
     </div>
   )
