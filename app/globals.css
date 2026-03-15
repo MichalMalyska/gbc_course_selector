@@ -53,6 +53,7 @@
 }
 
 html {
+  background: var(--bg);
   color-scheme: light;
 }
 
@@ -70,15 +71,26 @@ body {
     linear-gradient(180deg, var(--bg-overlay), transparent 32%), var(--bg);
 }
 
+* {
+  box-sizing: border-box;
+  border-color: var(--border);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
 ::selection {
   color: var(--text-inverse);
   background: var(--accent);
-}
-
-@layer base {
-  * {
-    border-color: var(--border);
-  }
 }
 
 @layer components {
@@ -103,15 +115,16 @@ body {
 
   .input-base {
     width: 100%;
-    border-radius: 0.875rem;
+    border-radius: 1rem;
     border: 1px solid var(--border);
     background: var(--surface-panel-strong);
     color: var(--text-primary);
-    padding: 0.75rem 0.875rem;
+    padding: 0.75rem 1rem;
     transition:
       border-color 150ms ease,
       box-shadow 150ms ease,
-      background-color 150ms ease;
+      background-color 150ms ease,
+      color 150ms ease;
   }
 
   .input-base::placeholder {
@@ -132,7 +145,8 @@ body {
     transition:
       background-color 150ms ease,
       border-color 150ms ease,
-      color 150ms ease;
+      color 150ms ease,
+      box-shadow 150ms ease;
   }
 
   .button-secondary:hover {
@@ -159,6 +173,16 @@ body {
     font-size: 0.8125rem;
     font-weight: 500;
     line-height: 1;
+    transition:
+      border-color 150ms ease,
+      background-color 150ms ease,
+      color 150ms ease;
+  }
+
+  .chip:hover {
+    border-color: var(--border-strong);
+    background: var(--surface-interactive);
+    color: var(--text-primary);
   }
 
   .skeleton-block {
@@ -180,5 +204,16 @@ body {
 @keyframes shimmer {
   100% {
     transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -1,5 +1,6 @@
 "use server"
 
+import type { DaysOfWeek, DeliveryType, TimeFilter } from "@/lib/course-search"
 import { coursesTable, db, schedulesTable } from "@/lib/drizzle"
 import { and, between, eq, gt, ilike, isNotNull, lt, or } from "drizzle-orm"
 
@@ -38,21 +39,13 @@ export async function allRunningCourses() {
 export async function searchCourseSessions(
   textSearch: string | null,
   department: string | null,
-  deliveryType: string | null, // "Online" or "On Campus"
-  startTime: string | null,
-  daysOfWeek: {
-    monday: boolean
-    tuesday: boolean
-    wednesday: boolean
-    thursday: boolean
-    friday: boolean
-    saturday: boolean
-    sunday: boolean
-  }
+  deliveryType: DeliveryType | null,
+  startTime: TimeFilter | null,
+  daysOfWeek: DaysOfWeek
 ) {
   const conditions = [isNotNull(schedulesTable.start_date)]
-  // Translate start time string to a time
-  if (startTime) {
+
+  if (startTime && startTime !== "any") {
     if (startTime === "morning") {
       conditions.push(lt(schedulesTable.start_time, "12:00:00"))
     } else if (startTime === "afternoon") {
@@ -68,8 +61,9 @@ export async function searchCourseSessions(
   if (department) {
     conditions.push(eq(coursesTable.course_prefix, department))
   }
-  if (deliveryType) {
-    let queryDeliveryType = deliveryType
+
+  if (deliveryType && deliveryType !== "any") {
+    let queryDeliveryType: string = deliveryType
     if (deliveryType.toLowerCase() === "online") {
       queryDeliveryType = "Online"
     } else if (deliveryType.toLowerCase() === "on-campus") {
@@ -77,8 +71,7 @@ export async function searchCourseSessions(
     }
     conditions.push(eq(coursesTable.course_delivery_type, queryDeliveryType))
   }
-  // Days of week conditions creation
-  // Needs to create an OR statement for each of the days of the week that is true and push just one condition that is the OR statement to the conditions array
+
   if (daysOfWeek) {
     const daysOfWeekConditions = []
     for (const day in daysOfWeek) {
@@ -96,6 +89,7 @@ export async function searchCourseSessions(
       conditions.push(daysOfWeekConditions[0])
     }
   }
+
   const filteredSessionsQuery = db
     .select()
     .from(schedulesTable)

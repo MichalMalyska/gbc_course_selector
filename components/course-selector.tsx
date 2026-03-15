@@ -1,9 +1,11 @@
 "use client"
 
+import { type CourseSearchResult } from "@/lib/course-search"
+import Link from "next/link"
 import { useState } from "react"
 
 type CourseSelectorProps = {
-  searchResults: any[]
+  searchResults: CourseSearchResult[]
   isLoading: boolean
   searchError: string | null
 }
@@ -44,51 +46,71 @@ function formatScheduleTime(value: string | null | undefined) {
   return `${normalizedHours}:${minutesString.padStart(2, "0")} ${period}`
 }
 
-function buildTimeRange(result: any) {
-  const startTime = result.schedules.start_time
-  const endTime = result.schedules.end_time
-
-  return `${formatScheduleTime(startTime)}${startTime && endTime ? " - " : ""}${endTime ? formatScheduleTime(endTime) : startTime ? "" : "N/A"}`
-}
-
-function buildDateRange(result: any) {
-  const startDate = result.schedules.start_date
-  const endDate = result.schedules.end_date
-
-  return `${formatScheduleDate(startDate)}${startDate && endDate ? " - " : ""}${endDate ? formatScheduleDate(endDate) : startDate ? "" : "N/A"}`
-}
-
-function buildCourseCode(result: any) {
-  const courseCode = result.courses?.course_code
-
-  if (courseCode) {
-    return courseCode
+function truncateText(text: string | null | undefined, maxLength: number) {
+  if (!text) {
+    return "No description available."
   }
 
-  const prefix = result.courses?.course_prefix
-  const number = result.courses?.course_number
+  if (text.length <= maxLength) {
+    return text
+  }
 
-  return [prefix, number].filter(Boolean).join(" ")
+  return `${text.slice(0, maxLength).trimEnd()}...`
 }
 
-function ResultDescription({ description }: { description: string }) {
-  const [isExpanded, setIsExpanded] = useState(false)
-  const shouldCollapse = description.length > 220
+function scheduleDateRange(result: CourseSearchResult) {
+  const { start_date: startDate, end_date: endDate } = result.schedules
+  const startLabel = formatScheduleDate(startDate)
+  const endLabel = formatScheduleDate(endDate)
+
+  if (!startDate || !endDate || startLabel === endLabel) {
+    return startLabel
+  }
+
+  return `${startLabel} - ${endLabel}`
+}
+
+function scheduleTimeRange(result: CourseSearchResult) {
+  const { start_time: startTime, end_time: endTime } = result.schedules
+
+  if (!startTime && !endTime) {
+    return "Self-paced / not listed"
+  }
+
+  if (startTime && endTime) {
+    return `${formatScheduleTime(startTime)} - ${formatScheduleTime(endTime)}`
+  }
+
+  return formatScheduleTime(startTime || endTime)
+}
+
+function DescriptionBlock({
+  description,
+  itemId,
+  expandedIds,
+  toggleExpanded,
+  previewLength,
+}: {
+  description: string | null | undefined
+  itemId: number
+  expandedIds: number[]
+  toggleExpanded: (itemId: number) => void
+  previewLength: number
+}) {
+  const fullText = description || "No description available."
+  const isExpanded = expandedIds.includes(itemId)
+  const needsToggle = fullText.length > previewLength
 
   return (
-    <div className="space-y-3">
-      <p
-        className={`text-sm leading-7 text-[color:var(--text-secondary)] ${
-          shouldCollapse && !isExpanded ? "line-clamp-5" : ""
-        }`}
-      >
-        {description}
+    <div className="space-y-2">
+      <p className="text-sm leading-6 text-[color:var(--text-secondary)]">
+        {isExpanded ? fullText : truncateText(fullText, previewLength)}
       </p>
-      {shouldCollapse ? (
+      {needsToggle ? (
         <button
           type="button"
-          className="text-sm font-semibold text-[color:var(--text-primary)] underline underline-offset-4 hover:text-[color:var(--accent-strong)]"
-          onClick={() => setIsExpanded((currentValue) => !currentValue)}
+          onClick={() => toggleExpanded(itemId)}
+          className="text-sm font-medium text-[color:var(--text-primary)] underline underline-offset-4 transition hover:text-[color:var(--accent-strong)]"
         >
           {isExpanded ? "Show less" : "Show more"}
         </button>
@@ -97,78 +119,102 @@ function ResultDescription({ description }: { description: string }) {
   )
 }
 
-function LoadingState() {
-  return (
-    <div className="space-y-4">
-      <div className="grid gap-4 md:hidden">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="surface-panel rounded-[1.75rem] p-5">
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div className="space-y-2">
-                <div className="skeleton-block h-5 w-40 rounded-full" />
-                <div className="skeleton-block h-4 w-24 rounded-full" />
-              </div>
-              <div className="skeleton-block h-8 w-20 rounded-full" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="skeleton-block h-16 rounded-2xl" />
-              <div className="skeleton-block h-16 rounded-2xl" />
-              <div className="skeleton-block col-span-2 h-20 rounded-2xl" />
-            </div>
-          </div>
-        ))}
-      </div>
+function buildCourseCode(course: CourseSearchResult["courses"]) {
+  if (!course) {
+    return "Course"
+  }
 
-      <div className="surface-panel hidden overflow-hidden rounded-[2rem] md:block">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-[color:var(--border)]">
-            <thead className="bg-[color:var(--surface-muted)]">
-              <tr>
-                {["Course", "Dept", "Day", "Time", "Dates", "Delivery", "Description"].map((label) => (
-                  <th
-                    key={label}
-                    className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--text-muted)]"
-                  >
-                    {label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[color:var(--border)]">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <tr key={index}>
-                  {Array.from({ length: 7 }).map((__, cellIndex) => (
-                    <td key={cellIndex} className="px-4 py-4">
-                      <div className="skeleton-block h-4 rounded-full" />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+  return course.course_code || course.course_prefix || "Course"
+}
+
+function CourseTitle({
+  courseName,
+  courseLink,
+  className,
+}: {
+  courseName: string
+  courseLink: string | null | undefined
+  className: string
+}) {
+  if (!courseLink) {
+    return <p className={className}>{courseName}</p>
+  }
+
+  return (
+    <Link href={courseLink} target="_blank" rel="noopener noreferrer" className={className}>
+      {courseName}
+    </Link>
+  )
+}
+
+function LoadingCards() {
+  return (
+    <div className="grid gap-4 lg:hidden">
+      {[0, 1, 2].map((item) => (
+        <div key={item} className="surface-panel rounded-3xl p-5">
+          <div className="skeleton-block h-6 w-2/3 rounded-full" />
+          <div className="mt-4 skeleton-block h-4 w-1/2 rounded-full" />
+          <div className="mt-6 grid gap-3">
+            <div className="skeleton-block h-4 w-full rounded-full" />
+            <div className="skeleton-block h-4 w-full rounded-full" />
+            <div className="skeleton-block h-4 w-5/6 rounded-full" />
+          </div>
         </div>
+      ))}
+    </div>
+  )
+}
+
+function LoadingTable() {
+  return (
+    <div className="surface-panel hidden overflow-hidden rounded-3xl lg:block">
+      <div className="grid grid-cols-[minmax(0,1.2fr)_0.8fr_0.9fr_0.9fr_0.8fr_1.6fr] gap-4 border-b border-[color:var(--border)] bg-[color:var(--surface-muted)] px-6 py-4 text-sm font-semibold text-[color:var(--text-secondary)]">
+        <span>Course</span>
+        <span>Day</span>
+        <span>Time</span>
+        <span>Dates</span>
+        <span>Delivery</span>
+        <span>About</span>
       </div>
+      {[0, 1, 2].map((item) => (
+        <div
+          key={item}
+          className="grid grid-cols-[minmax(0,1.2fr)_0.8fr_0.9fr_0.9fr_0.8fr_1.6fr] gap-4 border-b border-[color:var(--border)] px-6 py-5 last:border-b-0"
+        >
+          {[0, 1, 2, 3, 4, 5].map((cell) => (
+            <div key={cell} className="skeleton-block h-4 rounded-full" />
+          ))}
+        </div>
+      ))}
     </div>
   )
 }
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="surface-panel rounded-[2rem] p-10 text-center">
-      <div className="mx-auto max-w-md space-y-3">
-        <p className="text-sm font-medium uppercase tracking-[0.2em] text-[color:var(--text-muted)]">No matches</p>
-        <h3 className="text-2xl font-semibold tracking-tight text-[color:var(--text-primary)]">
-          No courses found matching your criteria.
-        </h3>
-        <p className="text-sm leading-6 text-[color:var(--text-secondary)]">{message}</p>
-      </div>
+    <div className="surface-panel rounded-3xl px-6 py-12 text-center">
+      <h3 className="text-lg font-semibold text-[color:var(--text-primary)]">No matching courses</h3>
+      <p className="mt-2 text-sm text-[color:var(--text-secondary)]">{message}</p>
     </div>
   )
 }
 
 export default function CourseSelector({ searchResults, isLoading, searchError }: CourseSelectorProps) {
-  if (isLoading && !searchResults.length) {
-    return <LoadingState />
+  const [expandedIds, setExpandedIds] = useState<number[]>([])
+
+  const toggleExpanded = (itemId: number) => {
+    setExpandedIds((current) =>
+      current.includes(itemId) ? current.filter((id) => id !== itemId) : [...current, itemId]
+    )
+  }
+
+  if (isLoading && searchResults.length === 0) {
+    return (
+      <div className="space-y-4">
+        <LoadingCards />
+        <LoadingTable />
+      </div>
+    )
   }
 
   if (searchError) {
@@ -176,137 +222,101 @@ export default function CourseSelector({ searchResults, isLoading, searchError }
   }
 
   if (!searchResults.length) {
-    return <EmptyState message="Try broadening the day, time, or delivery filters to see more results." />
+    return <EmptyState message="Try clearing a day, time, or department filter." />
   }
 
   return (
-    <section className="space-y-4">
-      <div className="grid gap-4 md:hidden">
-        {searchResults.map((result) => (
-          <article key={result.schedules.id} className="surface-panel rounded-[1.75rem] p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="space-y-2">
-                <a
-                  href={result.courses?.course_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-base font-semibold leading-6 text-[color:var(--text-primary)] underline-offset-4 hover:text-[color:var(--accent-strong)] hover:underline"
-                >
-                  {result.courses?.course_name}
-                </a>
-                <p className="text-xs font-medium text-[color:var(--text-secondary)]">{buildCourseCode(result)}</p>
-              </div>
-              <span className="chip">{result.courses?.course_delivery_type}</span>
-            </div>
+    <div className={`space-y-4 transition ${isLoading ? "opacity-70" : "opacity-100"}`}>
+      <div className="grid gap-4 lg:hidden">
+        {searchResults.map((result) => {
+          const course = result.courses
+          const schedule = result.schedules
 
-            <div className="mt-3 grid grid-cols-2 gap-2.5">
-              <div className="surface-muted rounded-2xl p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--text-muted)]">Day</p>
-                <p className="mt-2 text-sm font-medium text-[color:var(--text-primary)]">
-                  {result.schedules.day_of_week}
-                </p>
-              </div>
-              <div className="surface-muted rounded-2xl p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--text-muted)]">Time</p>
-                <p className="mt-2 text-sm font-medium text-[color:var(--text-primary)]">{buildTimeRange(result)}</p>
-              </div>
-              <div className="surface-muted rounded-2xl p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--text-muted)]">
-                  Dates
-                </p>
-                <p className="mt-2 text-sm font-medium text-[color:var(--text-primary)]">{buildDateRange(result)}</p>
-              </div>
-              <div className="surface-muted rounded-2xl p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--text-muted)]">
-                  About
-                </p>
-                <div className="mt-2">
-                  <ResultDescription description={result.courses?.course_description || "No description available."} />
+          return (
+            <article key={schedule.id} className="surface-panel rounded-3xl p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <CourseTitle
+                    courseName={course?.course_name || "Untitled course"}
+                    courseLink={course?.course_link}
+                    className="text-lg font-semibold text-[color:var(--text-primary)] underline underline-offset-4"
+                  />
+                  <p className="mt-1 text-sm text-[color:var(--text-muted)]">
+                    {buildCourseCode(course)} • {course?.course_delivery_type || "Delivery not listed"}
+                  </p>
                 </div>
+                <span className="chip">{schedule.day_of_week || "Flexible"}</span>
               </div>
-            </div>
-          </article>
-        ))}
+
+              <dl className="mt-5 grid grid-cols-2 gap-4 text-sm text-[color:var(--text-secondary)]">
+                <div>
+                  <dt className="font-medium text-[color:var(--text-primary)]">Time</dt>
+                  <dd className="mt-1">{scheduleTimeRange(result)}</dd>
+                </div>
+                <div>
+                  <dt className="font-medium text-[color:var(--text-primary)]">Dates</dt>
+                  <dd className="mt-1">{scheduleDateRange(result)}</dd>
+                </div>
+              </dl>
+
+              <div className="mt-5 border-t border-[color:var(--border)] pt-4">
+                <DescriptionBlock
+                  description={course?.course_description}
+                  itemId={schedule.id}
+                  expandedIds={expandedIds}
+                  toggleExpanded={toggleExpanded}
+                  previewLength={220}
+                />
+              </div>
+            </article>
+          )
+        })}
       </div>
 
-      <div className="surface-panel hidden overflow-hidden rounded-[2rem] md:block">
-        <div className="overflow-x-auto">
-          <table className="min-w-[1180px] w-full table-fixed border-separate border-spacing-0">
-            <colgroup>
-              <col className="w-[26%]" />
-              <col className="w-[11%]" />
-              <col className="w-[15%]" />
-              <col className="w-[15%]" />
-              <col className="w-[12%]" />
-              <col className="w-[21%]" />
-            </colgroup>
-            <thead
-              style={{
-                background:
-                  "linear-gradient(180deg, color-mix(in srgb, var(--surface-muted) 80%, white 20%), var(--surface-muted))",
-              }}
-            >
-              <tr>
-                <th className="rounded-tl-[2rem] border-b border-[color:var(--border)] px-6 py-6 text-left text-sm font-semibold text-[color:var(--text-secondary)]">
-                  Course
-                </th>
-                <th className="border-b border-[color:var(--border)] px-6 py-6 text-left text-sm font-semibold text-[color:var(--text-secondary)]">
-                  Day
-                </th>
-                <th className="border-b border-[color:var(--border)] px-6 py-6 text-left text-sm font-semibold text-[color:var(--text-secondary)]">
-                  Time
-                </th>
-                <th className="border-b border-[color:var(--border)] px-6 py-6 text-left text-sm font-semibold text-[color:var(--text-secondary)]">
-                  Dates
-                </th>
-                <th className="border-b border-[color:var(--border)] px-6 py-6 text-left text-sm font-semibold text-[color:var(--text-secondary)]">
-                  Delivery
-                </th>
-                <th className="rounded-tr-[2rem] border-b border-[color:var(--border)] px-6 py-6 text-left text-sm font-semibold text-[color:var(--text-secondary)]">
-                  About
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {searchResults.map((result) => (
-                <tr
-                  key={result.schedules.id}
-                  className="align-top transition-colors hover:bg-[color:var(--surface-interactive)]"
-                >
-                  <td className="border-b border-[color:var(--border)] px-6 py-6">
-                    <a
-                      href={result.courses?.course_link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-base font-semibold leading-7 text-[color:var(--text-primary)] underline-offset-4 hover:text-[color:var(--accent-strong)] hover:underline"
-                    >
-                      {result.courses?.course_name}
-                    </a>
-                    <p className="mt-1.5 text-sm text-[color:var(--text-muted)]">{buildCourseCode(result)}</p>
-                  </td>
-                  <td className="border-b border-[color:var(--border)] px-6 py-6 text-base leading-7 text-[color:var(--text-secondary)] whitespace-nowrap">
-                    {result.schedules.day_of_week}
-                  </td>
-                  <td className="border-b border-[color:var(--border)] px-6 py-6 text-base leading-7 text-[color:var(--text-secondary)] whitespace-nowrap">
-                    {buildTimeRange(result)}
-                  </td>
-                  <td className="border-b border-[color:var(--border)] px-6 py-6 text-base leading-7 text-[color:var(--text-secondary)] whitespace-nowrap">
-                    {buildDateRange(result)}
-                  </td>
-                  <td className="border-b border-[color:var(--border)] px-6 py-6 text-base leading-7 text-[color:var(--text-secondary)] whitespace-nowrap">
-                    {result.courses?.course_delivery_type}
-                  </td>
-                  <td className="border-b border-[color:var(--border)] px-6 py-6 align-top">
-                    <ResultDescription
-                      description={result.courses?.course_description || "No description available."}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="surface-panel hidden overflow-hidden rounded-3xl lg:block">
+        <div className="grid min-w-[1180px] grid-cols-[minmax(0,1.2fr)_0.8fr_0.9fr_0.9fr_0.8fr_1.6fr] gap-4 border-b border-[color:var(--border)] bg-[color:var(--surface-muted)] px-6 py-4 text-sm font-semibold text-[color:var(--text-secondary)]">
+          <span>Course</span>
+          <span>Day</span>
+          <span>Time</span>
+          <span>Dates</span>
+          <span>Delivery</span>
+          <span>About</span>
         </div>
+
+        {searchResults.map((result) => {
+          const course = result.courses
+          const schedule = result.schedules
+
+          return (
+            <div
+              key={schedule.id}
+              className="grid min-w-[1180px] grid-cols-[minmax(0,1.2fr)_0.8fr_0.9fr_0.9fr_0.8fr_1.6fr] gap-4 border-b border-[color:var(--border)] px-6 py-5 align-top last:border-b-0"
+            >
+              <div className="min-w-0">
+                <CourseTitle
+                  courseName={course?.course_name || "Untitled course"}
+                  courseLink={course?.course_link}
+                  className="block text-base font-semibold text-[color:var(--text-primary)] underline underline-offset-4"
+                />
+                <p className="mt-2 text-sm text-[color:var(--text-muted)]">{buildCourseCode(course)}</p>
+              </div>
+              <div className="text-sm text-[color:var(--text-secondary)]">{schedule.day_of_week || "Flexible"}</div>
+              <div className="text-sm text-[color:var(--text-secondary)]">{scheduleTimeRange(result)}</div>
+              <div className="text-sm text-[color:var(--text-secondary)]">{scheduleDateRange(result)}</div>
+              <div className="text-sm text-[color:var(--text-secondary)]">
+                {course?.course_delivery_type || "Not listed"}
+              </div>
+              <DescriptionBlock
+                description={course?.course_description}
+                itemId={schedule.id}
+                expandedIds={expandedIds}
+                toggleExpanded={toggleExpanded}
+                previewLength={180}
+              />
+            </div>
+          )
+        })}
       </div>
-    </section>
+    </div>
   )
 }

@@ -1,158 +1,133 @@
 "use client"
 
-export interface SearchCriteria {
-  textSearch: string
-  department: string
-  deliveryType: string
-  daysOfWeek: {
-    monday: boolean
-    tuesday: boolean
-    wednesday: boolean
-    thursday: boolean
-    friday: boolean
-    saturday: boolean
-    sunday: boolean
-  }
-  startTime: string
-}
+import type { Dispatch, SetStateAction } from "react"
+import {
+  createDefaultSearchCriteria,
+  dayOptions,
+  deliveryTypeLabels,
+  type DayKey,
+  type SearchCriteria,
+  timeFilterLabels,
+} from "@/lib/course-search"
 
 interface CourseSearchProps {
   allDepartments: string[]
   searchCriteria: SearchCriteria
-  setSearchCriteria: (searchCriteria: SearchCriteria) => void
+  setSearchCriteria: Dispatch<SetStateAction<SearchCriteria>>
 }
 
-const defaultSearchCriteria: SearchCriteria = {
-  textSearch: "",
-  department: "HOSF",
-  deliveryType: "on-campus",
-  daysOfWeek: {
-    monday: false,
-    tuesday: true,
-    wednesday: false,
-    thursday: false,
-    friday: false,
-    saturday: false,
-    sunday: false,
-  },
-  startTime: "evening",
+function sectionTitle(title: string) {
+  return <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-[color:var(--text-muted)]">{title}</h2>
 }
-
-const dayOptions = [
-  { key: "monday", label: "Mon" },
-  { key: "tuesday", label: "Tue" },
-  { key: "wednesday", label: "Wed" },
-  { key: "thursday", label: "Thu" },
-  { key: "friday", label: "Fri" },
-  { key: "saturday", label: "Sat" },
-  { key: "sunday", label: "Sun" },
-] as const
 
 export function CourseSearchInputs({ allDepartments, searchCriteria, setSearchCriteria }: CourseSearchProps) {
   const { textSearch, department, deliveryType, daysOfWeek, startTime } = searchCriteria
+  const activeDays = dayOptions.filter((day) => daysOfWeek[day.key]).length
+
+  const toggleDay = (dayKey: DayKey) => {
+    setSearchCriteria((current) => ({
+      ...current,
+      daysOfWeek: {
+        ...current.daysOfWeek,
+        [dayKey]: !current.daysOfWeek[dayKey],
+      },
+    }))
+  }
 
   return (
-    <section className="surface-panel rounded-[2rem] p-5 sm:p-6">
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">Filters</h2>
-          <p className="text-sm leading-6 text-[color:var(--text-secondary)]">
-            Narrow the list by course details, schedule, and delivery type.
-          </p>
-        </div>
+    <div className="surface-panel rounded-3xl p-5">
+      <div className="flex items-center justify-between gap-3 border-b border-[color:var(--border)] pb-4">
+        <h1 className="text-lg font-semibold text-[color:var(--text-primary)]">Filters</h1>
         <button
           type="button"
-          className="button-secondary px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em]"
-          onClick={() => setSearchCriteria(defaultSearchCriteria)}
+          onClick={() => setSearchCriteria(createDefaultSearchCriteria())}
+          className="button-secondary px-3 py-1.5 text-sm font-medium"
         >
           Reset
         </button>
       </div>
 
-      <form className="space-y-5" onSubmit={(event) => event.preventDefault()}>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-[color:var(--text-primary)]" htmlFor="text-search">
-            Course name
+      <div className="mt-5 space-y-6">
+        <section className="space-y-2">
+          {sectionTitle("Keyword")}
+          <label className="block text-sm text-[color:var(--text-secondary)]" htmlFor="course-search">
+            Search by course name
           </label>
           <input
-            id="text-search"
-            className="input-base"
-            placeholder="Search by course title"
+            id="course-search"
+            type="search"
             value={textSearch}
-            onChange={(event) => setSearchCriteria({ ...searchCriteria, textSearch: event.target.value })}
+            placeholder="Knife skills, sushi, baking..."
+            onChange={(event) =>
+              setSearchCriteria((current) => ({
+                ...current,
+                textSearch: event.target.value,
+              }))
+            }
+            className="input-base"
           />
-        </div>
+        </section>
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-[color:var(--text-primary)]" htmlFor="department">
-              Department
-            </label>
-            <select
-              id="department"
-              className="input-base"
-              value={department}
-              onChange={(event) =>
-                setSearchCriteria({
-                  ...searchCriteria,
-                  department: event.target.value,
-                })
-              }
-            >
-              {allDepartments.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-[color:var(--text-primary)]" htmlFor="delivery-type">
-              Delivery type
-            </label>
-            <select
-              id="delivery-type"
-              className="input-base"
-              value={deliveryType}
-              onChange={(event) =>
-                setSearchCriteria({
-                  ...searchCriteria,
-                  deliveryType: event.target.value,
-                })
-              }
-            >
-              <option value="online">Online</option>
-              <option value="on-campus">On campus</option>
-              <option value="both">Both</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-[color:var(--text-primary)]" htmlFor="start-time">
-            Start time
+        <section className="space-y-3">
+          {sectionTitle("Department")}
+          <label className="block text-sm text-[color:var(--text-secondary)]" htmlFor="department-filter">
+            Course area
           </label>
           <select
-            id="start-time"
-            className="input-base"
-            value={startTime}
+            id="department-filter"
+            value={department}
             onChange={(event) =>
-              setSearchCriteria({
-                ...searchCriteria,
-                startTime: event.target.value,
-              })
+              setSearchCriteria((current) => ({
+                ...current,
+                department: event.target.value,
+              }))
             }
+            className="input-base"
           >
-            <option value="morning">Morning (8am - 12pm)</option>
-            <option value="afternoon">Day (12pm - 6pm)</option>
-            <option value="evening">Evening (6pm - 10pm)</option>
+            <option value="">All departments</option>
+            {allDepartments.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
           </select>
-        </div>
+        </section>
 
-        <fieldset className="space-y-3">
-          <legend className="text-sm font-medium text-[color:var(--text-primary)]">Days of the week</legend>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2">
+        <section className="space-y-3">
+          {sectionTitle("Delivery")}
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+            {Object.entries(deliveryTypeLabels).map(([value, label]) => {
+              const isActive = deliveryType === value
+
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() =>
+                    setSearchCriteria((current) => ({
+                      ...current,
+                      deliveryType: value as SearchCriteria["deliveryType"],
+                    }))
+                  }
+                  className={`rounded-2xl border px-3 py-2.5 text-sm font-medium transition ${
+                    isActive
+                      ? "border-[color:var(--accent)] bg-[color:var(--accent)] text-[color:var(--text-inverse)] shadow-sm"
+                      : "border-[color:var(--border)] bg-[color:var(--surface-muted)] text-[color:var(--text-secondary)] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-panel-strong)]"
+                  }`}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            {sectionTitle("Days")}
+            <span className="text-xs font-medium text-[color:var(--text-muted)]">{activeDays} selected</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
             {dayOptions.map((day) => {
               const isActive = daysOfWeek[day.key]
 
@@ -160,28 +135,43 @@ export function CourseSearchInputs({ allDepartments, searchCriteria, setSearchCr
                 <button
                   key={day.key}
                   type="button"
-                  className={`rounded-2xl border px-3 py-2 text-sm font-medium transition-colors ${
+                  onClick={() => toggleDay(day.key)}
+                  className={`rounded-2xl border px-3 py-2.5 text-sm font-medium transition ${
                     isActive
                       ? "border-[color:var(--accent)] bg-[color:var(--accent-soft)] text-[color:var(--accent-strong)]"
-                      : "border-[color:var(--border)] bg-[color:var(--surface-panel-strong)] text-[color:var(--text-secondary)] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-interactive)]"
+                      : "border-[color:var(--border)] bg-[color:var(--surface-muted)] text-[color:var(--text-secondary)] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-panel-strong)]"
                   }`}
-                  onClick={() =>
-                    setSearchCriteria({
-                      ...searchCriteria,
-                      daysOfWeek: {
-                        ...daysOfWeek,
-                        [day.key]: !daysOfWeek[day.key],
-                      },
-                    })
-                  }
                 >
-                  {day.label}
+                  {day.shortLabel}
                 </button>
               )
             })}
           </div>
-        </fieldset>
-      </form>
-    </section>
+        </section>
+
+        <section className="space-y-3">
+          {sectionTitle("Time")}
+          <label className="block text-sm text-[color:var(--text-secondary)]" htmlFor="time-filter">
+            Time of day
+          </label>
+          <select
+            id="time-filter"
+            value={startTime}
+            onChange={(event) =>
+              setSearchCriteria((current) => ({
+                ...current,
+                startTime: event.target.value as SearchCriteria["startTime"],
+              }))
+            }
+            className="input-base"
+          >
+            <option value="any">{timeFilterLabels.any}</option>
+            <option value="morning">{timeFilterLabels.morning} (8am-12pm)</option>
+            <option value="afternoon">{timeFilterLabels.afternoon} (12pm-6pm)</option>
+            <option value="evening">{timeFilterLabels.evening} (6pm-10pm)</option>
+          </select>
+        </section>
+      </div>
+    </div>
   )
 }

@@ -20,6 +20,8 @@ Example:
 POSTGRES_URL=postgresql://username:password@ep-example-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
 ```
 
+The scraper-owned schema contract is documented in [COURSE_SCRAPER_SCHEMA.md](/Users/michalmalyska/Projects/gbc_course_selector/COURSE_SCRAPER_SCHEMA.md).
+
 ## Local development
 
 ```bash
